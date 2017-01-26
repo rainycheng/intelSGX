@@ -1,0 +1,6 @@
+12:58:31 **** Incremental Build of configuration Default for project SampleEnclave ****
+make SGX_MODE=SIM all 
+The project has been built in debug simulation mode.
+
+12:58:31 Build Finished (took 91ms)
+

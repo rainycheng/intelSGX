@@ -1,0 +1,29 @@
+15:58:34 **** Incremental Build of configuration SGX Simulation Debug for project testSGX ****
+make SGX_DEBUG=1 SGX_MODE=SIM -f sgx/Makefile all 
+make -C ./sgx/enclave_encl1  -f sgx_u.mk all;
+make[1]: Entering directory `/home/cheng/workspace/testSGX/sgx/enclave_encl1'
+GEN  =>  untrusted/encl1_u.c
+cc1: warning: command line option ‘-fpermissive’ is valid for C++/ObjC++ but not for C [enabled by default]
+CC   <=  untrusted/encl1_u.c
+LINK =>  sample
+make[1]: Leaving directory `/home/cheng/workspace/testSGX/sgx/enclave_encl1'
+make -C ./sgx/enclave_encl1    -f sgx_t.mk all;
+make[1]: Entering directory `/home/cheng/workspace/testSGX/sgx/enclave_encl1'
+GEN  =>  trusted/encl1_t.c
+CC   <=  trusted/encl1_t.c
+LINK =>  encl1.so
+Succeed.
+<EnclaveConfiguration>
+    <ProdID>0</ProdID>
+    <ISVSVN>0</ISVSVN>
+    <StackMaxSize>0x40000</StackMaxSize>
+    <HeapMaxSize>0x100000</HeapMaxSize>
+    <TCSNum>10</TCSNum>
+    <TCSPolicy>1</TCSPolicy>
+    <DisableDebug>0</DisableDebug>
+</EnclaveConfiguration>
+SIGN =>  encl1.signed.so
+make[1]: Leaving directory `/home/cheng/workspace/testSGX/sgx/enclave_encl1'
+
+15:58:35 Build Finished (took 316ms)
+

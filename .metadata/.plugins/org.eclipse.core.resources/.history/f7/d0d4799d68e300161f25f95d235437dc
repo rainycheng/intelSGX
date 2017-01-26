@@ -1,0 +1,19 @@
+/* encl1.edl - Top EDL file. */
+
+enclave {
+    
+    /* 
+     * ocall_encl1_sample - invokes OCALL to display string buffer inside the enclave.
+     *  [in]: copy the string buffer to App outside.
+     *  [string]: specifies 'str' is a NULL terminated buffer.
+     */
+    untrusted {
+        void ocall_encl1_sample([in, string] const char *str);
+    };
+
+
+    trusted {
+    	    public int ecall_encl1_sample();
+    	    public void ecall_encl1_AES_GCM_decrypt([in,string]const char *p_src, uint32_t src_len, [out, string]char *p_dec, [out] uint32_t *dec_len)
+    };
+};

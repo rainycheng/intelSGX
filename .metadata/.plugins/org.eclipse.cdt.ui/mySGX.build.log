@@ -1,0 +1,20 @@
+14:00:15 **** Incremental Build of configuration SGX Simulation for project mySGX ****
+make SGX_DEBUG=0 SGX_MODE=SIM -f sgx/Makefile all 
+make -C ./sgx/enclave_encl1  -f sgx_u.mk all;  make -C ./sgx/trustedlib_lib1  -f sgx_u.mk all;
+make[1]: *** No rule to make target `untrusted/%.o', needed by `sample'.  Stop.
+make[1]: Entering directory `/home/cheng/workspace/mySGX/sgx/enclave_encl1'
+make[1]: Leaving directory `/home/cheng/workspace/mySGX/sgx/enclave_encl1'
+make[1]: Entering directory `/home/cheng/workspace/mySGX/sgx/trustedlib_lib1'
+make[1]: Nothing to be done for `all'.
+make[1]: Leaving directory `/home/cheng/workspace/mySGX/sgx/trustedlib_lib1'
+make -C ./sgx/enclave_encl1    -f sgx_t.mk all;
+make[1]: Entering directory `/home/cheng/workspace/mySGX/sgx/enclave_encl1'
+make[1]: Nothing to be done for `all'.
+make[1]: Leaving directory `/home/cheng/workspace/mySGX/sgx/enclave_encl1'
+make -C ./sgx/trustedlib_lib1  -f sgx_t_static.mk all;
+make[1]: Entering directory `/home/cheng/workspace/mySGX/sgx/trustedlib_lib1'
+make[1]: Nothing to be done for `all'.
+make[1]: Leaving directory `/home/cheng/workspace/mySGX/sgx/trustedlib_lib1'
+
+14:00:15 Build Finished (took 114ms)
+

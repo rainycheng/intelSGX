@@ -1,0 +1,6 @@
+12:06:04 **** Incremental Build of configuration Default for project LocalAttestation ****
+make all 
+make: *** No rule to make target `/opt/intel/sgxsdk/bin/x64/sgx_edger8r', needed by `LocalAttestationCode/LocalAttestationCode_t.c'.  Stop.
+
+12:06:04 Build Finished (took 93ms)
+
