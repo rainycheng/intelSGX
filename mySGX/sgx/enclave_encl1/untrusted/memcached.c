@@ -52,6 +52,9 @@
 #include <unistd.h>
 #include <libgen.h>
 #include <sys/time.h>
+#include <openssl/bio.h>
+#include <openssl/evp.h>
+#include <sgx_tcrypto.h>
 
 # define MAX_PATH FILENAME_MAX
 
@@ -4500,6 +4503,32 @@ static enum try_read_result try_read_udp(conn *c) {
     return READ_NO_DATA_RECEIVED;
 }
 
+void my_aes_gcm_encrypt(char *p_src, uint32_t src_len, char *p_dst, uint32_t *dst_len){  
+    uint8_t gcm_key[16]= {
+    0xee,0xbc,0x1f,0x57,0x48,0x7f,0x51,0x92,0x1c,0x04,0x65,0x66,
+    0x5f,0x8a,0xe6,0xd1
+    };
+    uint8_t gcm_iv[12] = {
+    0x99,0xaa,0x3e,0x68,0xed,0x81,0x73,0xa0,0xee,0xd0,0x66,0x84
+    };
+
+    EVP_CIPHER_CTX *ctx;
+    sgx_aes_gcm_128bit_tag_t p_out_mac;
+    
+    ctx = EVP_CIPHER_CTX_new();
+    EVP_EncryptInit_ex(ctx, EVP_aes_128_gcm(), NULL, NULL, NULL);
+    EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, sizeof(gcm_iv), NULL);
+    EVP_EncryptInit_ex(ctx, NULL, NULL, gcm_key, gcm_iv);
+    EVP_EncryptUpdate(ctx, p_dst, dst_len, p_src, strlen(p_src));
+
+//        printf("Ciphertext:\n");
+//        BIO_dump_fp(stdout, p_dst, *dst_len);
+//        printf("\n");
+    EVP_EncryptFinal_ex(ctx, p_dst, dst_len);
+    EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, &p_out_mac);
+    EVP_CIPHER_CTX_free(ctx);
+}
+
 /*
  * read from network as much as we can, handle buffer overflow and connection
  * close.
@@ -4566,7 +4595,16 @@ static enum try_read_result try_read_network(conn *c) {
                 continue;
             } else {
             	sgx_buf = c->rbuf + sgx_buf_remain;
-
+            	char *sgx_buf_enc;
+                uint32_t enc_len, dec_len;
+                sgx_buf_enc = (char *)malloc(sizeof(char)*1000);
+           
+            	my_aes_gcm_encrypt(sgx_buf, strlen(sgx_buf), sgx_buf_enc, &enc_len);
+            	//when enclave returns, the decrypted string is directly copied into sgx_buf
+                //to reduce extra copy overhead.
+                printf("Application encrypt success:%s\n",sgx_buf_enc);
+                ecall_encl1_AES_GCM_decrypt(global_eid, sgx_buf_enc, enc_len, sgx_buf, &dec_len);
+                printf("SGX Enclave decypt success: %s\n",sgx_buf);
                 break;
             }
         }
@@ -5964,8 +6002,8 @@ int SGX_CDECL main(int argc, char *argv[]){
     /* Changing dir to where the executable is.*/
     char absolutePath [MAX_PATH];
     //char *ptr;
-    unsigned char p_src[1000];
-    uint32_t src_len;
+//    unsigned char p_src[1000];
+//    uint32_t src_len;
 
  //   ptr = realpath(dirname(argv[0]),absolutePath);
     if (realpath(dirname(argv[0]),absolutePath)!=NULL){
@@ -5981,44 +6019,44 @@ int SGX_CDECL main(int argc, char *argv[]){
         return -1;
     }
 
-    sgx_status_t ret = SGX_ERROR_UNEXPECTED;
-    int ecall_return = 0;
+//    sgx_status_t ret = SGX_ERROR_UNEXPECTED;
+//    int ecall_return = 0;
 
-    printf("Input plain text:");
-    if (scanf("%s", p_src)==1){
-    	printf("input ok!\n");
-    }
-    src_len = strlen((const char *)p_src);
-    printf("txt length: %d\n", src_len);
+//    printf("Input plain text:");
+//    if (scanf("%s", p_src)==1){
+//    	printf("input ok!\n");
+//    }
+//    src_len = strlen((const char *)p_src);
+//    printf("txt length: %d\n", src_len);
 
     //cycle_t tStart, tEnd;
-    struct timeval tBeginTime, tEndTime;
+//    struct timeval tBeginTime, tEndTime;
 
     //RDTSC_LL(tStart);
-    gettimeofday(&tBeginTime, NULL);
+//    gettimeofday(&tBeginTime, NULL);
 
-    ret = ecall_encl1_AES_GCM_encrypt(global_eid, (const char *)p_src, src_len);
+//    ret = ecall_encl1_AES_GCM_encrypt(global_eid, (const char *)p_src, src_len);
 
-    gettimeofday(&tEndTime, NULL);
+//    gettimeofday(&tEndTime, NULL);
     //RDTSC_LL(tEnd);
 
-    float fCostTime = 1000000*(tEndTime.tv_sec-tBeginTime.tv_sec)+(tEndTime.tv_usec-tBeginTime.tv_usec);
-    printf("[gettimeofday]Cost Time = %f uSec\n", fCostTime);
+//    float fCostTime = 1000000*(tEndTime.tv_sec-tBeginTime.tv_sec)+(tEndTime.tv_usec-tBeginTime.tv_usec);
+//    printf("[gettimeofday]Cost Time = %f uSec\n", fCostTime);
 
     //printf("Enclave encryption consume %ld cycles.\n", tEnd-tStart);
 
-    if (ret != SGX_SUCCESS)
-        abort();
+//    if (ret != SGX_SUCCESS)
+//        abort();
 
-    if (ecall_return == 0) {
-      printf("Application ran with success\n");
-    }
-    else
-    {
-        printf("Application failed %d \n", ecall_return);
-    }
+//    if (ecall_return == 0) {
+//      printf("Application ran with success\n");
+//    }
+//   else
+//    {
+//        printf("Application failed %d \n", ecall_return);
+//    }
 
-    sgx_destroy_enclave(global_eid);
+//    sgx_destroy_enclave(global_eid);
 
 /***************************SGX code end************************************/
 

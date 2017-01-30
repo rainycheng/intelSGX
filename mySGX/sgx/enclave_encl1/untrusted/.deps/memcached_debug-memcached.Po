@@ -106,12 +106,22 @@ memcached_debug-memcached.o: memcached.c /usr/include/stdc-predef.h \
  /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
  /usr/include/x86_64-linux-gnu/bits/stdlib.h /usr/include/sysexits.h \
- /usr/include/libgen.h /home/cheng/sgxsdk/include/sgx_urts.h \
+ /usr/include/libgen.h /usr/include/openssl/bio.h \
+ /usr/include/openssl/e_os2.h \
+ /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
+ /usr/include/openssl/crypto.h /usr/include/openssl/stack.h \
+ /usr/include/openssl/safestack.h /usr/include/openssl/opensslv.h \
+ /usr/include/openssl/ossl_typ.h /usr/include/openssl/symhacks.h \
+ /usr/include/openssl/evp.h /usr/include/openssl/objects.h \
+ /usr/include/openssl/obj_mac.h /usr/include/openssl/asn1.h \
+ /usr/include/openssl/bn.h /home/cheng/sgxsdk/include/sgx_tcrypto.h \
+ /home/cheng/sgxsdk/include/sgx.h /home/cheng/sgxsdk/include/sgx_error.h \
  /home/cheng/sgxsdk/include/sgx_attributes.h \
- /home/cheng/sgxsdk/include/sgx_error.h \
- /home/cheng/sgxsdk/include/sgx_eid.h \
+ /home/cheng/sgxsdk/include/sgx_key.h \
+ /home/cheng/sgxsdk/include/sgx_report.h \
  /home/cheng/sgxsdk/include/sgx_defs.h \
- /home/cheng/sgxsdk/include/sgx_key.h sample.h \
+ /home/cheng/sgxsdk/include/sgx_urts.h \
+ /home/cheng/sgxsdk/include/sgx_eid.h sample.h \
  /home/cheng/sgxsdk/include/sgx_error.h \
  /home/cheng/sgxsdk/include/sgx_eid.h encl1_u.h \
  /usr/include/x86_64-linux-gnu/bits/wchar2.h \
@@ -421,17 +431,51 @@ util.h:
 
 /usr/include/libgen.h:
 
-/home/cheng/sgxsdk/include/sgx_urts.h:
+/usr/include/openssl/bio.h:
 
-/home/cheng/sgxsdk/include/sgx_attributes.h:
+/usr/include/openssl/e_os2.h:
+
+/usr/include/x86_64-linux-gnu/openssl/opensslconf.h:
+
+/usr/include/openssl/crypto.h:
+
+/usr/include/openssl/stack.h:
+
+/usr/include/openssl/safestack.h:
+
+/usr/include/openssl/opensslv.h:
+
+/usr/include/openssl/ossl_typ.h:
+
+/usr/include/openssl/symhacks.h:
+
+/usr/include/openssl/evp.h:
+
+/usr/include/openssl/objects.h:
+
+/usr/include/openssl/obj_mac.h:
+
+/usr/include/openssl/asn1.h:
+
+/usr/include/openssl/bn.h:
+
+/home/cheng/sgxsdk/include/sgx_tcrypto.h:
+
+/home/cheng/sgxsdk/include/sgx.h:
 
 /home/cheng/sgxsdk/include/sgx_error.h:
 
-/home/cheng/sgxsdk/include/sgx_eid.h:
+/home/cheng/sgxsdk/include/sgx_attributes.h:
+
+/home/cheng/sgxsdk/include/sgx_key.h:
+
+/home/cheng/sgxsdk/include/sgx_report.h:
 
 /home/cheng/sgxsdk/include/sgx_defs.h:
 
-/home/cheng/sgxsdk/include/sgx_key.h:
+/home/cheng/sgxsdk/include/sgx_urts.h:
+
+/home/cheng/sgxsdk/include/sgx_eid.h:
 
 sample.h:
 

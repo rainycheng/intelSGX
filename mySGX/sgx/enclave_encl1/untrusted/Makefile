@@ -336,7 +336,7 @@ AUTOMAKE = ${SHELL} /home/cheng/workspace/mySGX/sgx/enclave_encl1/untrusted/miss
 AWK = mawk
 CC = gcc -std=gnu99
 CCDEPMODE = depmode=gcc3
-CFLAGS = -g -O2 -pthread -pthread -Wmissing-prototypes -Wmissing-declarations -Wredundant-decls
+CFLAGS = -g -O2 -pthread -Wmissing-prototypes -Wmissing-declarations -Wredundant-decls
 CPP = gcc -E
 CPPFLAGS = -I/usr/local/libevent/include 
 CYGPATH_W = echo
@@ -443,7 +443,8 @@ Urts_Library_Name := sgx_urts_sim
 App_Include_Paths := -IInclude -I$(SGX_SDK)/include
 App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths) 
 App_Link_Flags := -L$(SGX_LIBRARY_PATH) -l$(Urts_Library_Name) \
-	-lpthread -L/usr/local/libevent/include -lsgx_uae_service_sim
+	-lpthread -L/usr/local/libevent/include -lsgx_uae_service_sim \
+	-lcrypto
 BUILT_SOURCES = $(am__append_5)
 testapp_SOURCES = testapp.c util.c util.h $(am__append_2)
 timedrun_SOURCES = timedrun.c

@@ -17,7 +17,7 @@ App_Include_Paths := -IInclude -I$(SGX_SDK)/include
 App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths) 
 
 App_Link_Flags := -L$(SGX_LIBRARY_PATH) -l$(Urts_Library_Name) -lpthread -L/usr/local/libevent/include
-App_Link_Flags += -lsgx_uae_service_sim
+App_Link_Flags += -lsgx_uae_service_sim -lcrypto
 
 
 BUILT_SOURCES=

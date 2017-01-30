@@ -303,11 +303,11 @@ ctx = EVP_CIPHER_CTX_new();
     uint32_t dec_len=0;
     char *p_dec;
     p_dec = (char *)malloc(sizeof(char)*1000);
-    ret = ecall_encl1_AES_GCM_decrypt(global_eid, p_dst, strlen(p_dst), p_dec, &dec_len);
+    ret = ecall_encl1_AES_GCM_decrypt(global_eid, p_dst, strlen(p_dst), p_dst, &dec_len);
     if(ret == SGX_SUCCESS){
-    	printf("Decrypt success: %s\n", p_dec);
+    	printf("Decrypt success: %s\n", p_dst);
     	printf("Descrpt length: %d\n", dec_len);
-    	printf("strlen(p_dec):%d\n", strlen(p_dec));
+    	printf("strlen(p_dec):%d\n", strlen(p_dst));
     }
 
     sgx_destroy_enclave(global_eid);

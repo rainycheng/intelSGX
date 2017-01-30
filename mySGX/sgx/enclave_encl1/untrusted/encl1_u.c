@@ -1,10 +1,12 @@
 #include "encl1_u.h"
 #include <errno.h>
 
-typedef struct ms_ecall_encl1_AES_GCM_encrypt_t {
+typedef struct ms_ecall_encl1_AES_GCM_decrypt_t {
 	char* ms_p_src;
 	uint32_t ms_src_len;
-} ms_ecall_encl1_AES_GCM_encrypt_t;
+	char* ms_p_dec;
+	uint32_t* ms_dec_len;
+} ms_ecall_encl1_AES_GCM_decrypt_t;
 
 typedef struct ms_ocall_encl1_sample_t {
 	char* ms_str;
@@ -27,12 +29,14 @@ static const struct {
 		(void*)encl1_ocall_encl1_sample,
 	}
 };
-sgx_status_t ecall_encl1_AES_GCM_encrypt(sgx_enclave_id_t eid, const char* p_src, uint32_t src_len)
+sgx_status_t ecall_encl1_AES_GCM_decrypt(sgx_enclave_id_t eid, const char* p_src, uint32_t src_len, char* p_dec, uint32_t* dec_len)
 {
 	sgx_status_t status;
-	ms_ecall_encl1_AES_GCM_encrypt_t ms;
+	ms_ecall_encl1_AES_GCM_decrypt_t ms;
 	ms.ms_p_src = (char*)p_src;
 	ms.ms_src_len = src_len;
+	ms.ms_p_dec = p_dec;
+	ms.ms_dec_len = dec_len;
 	status = sgx_ecall(eid, 0, &ocall_table_encl1, &ms);
 	return status;
 }
