@@ -67,10 +67,10 @@ void ecall_encl1_AES_GCM_decrypt(const char *p_src, uint32_t src_len, char *p_de
        printf("MAC: %s\n", p_out_mac);
     }
 
-    p_decrypt = (uint8_t *)malloc(sizeof(uint8_t)*1000);
-    ret = sgx_rijndael128GCM_decrypt(p_key, p_src, src_len, p_decrypt, p_iv, iv_len, p_aad, aad_len, p_out_mac);
-    p_dec = p_decrypt;
-    *dec_len = strlen(p_decrypt);
+//    p_decrypt = (uint8_t *)malloc(sizeof(uint8_t)*1000);
+    ret = sgx_rijndael128GCM_decrypt(p_key, p_src, src_len, p_dec, p_iv, iv_len, p_aad, aad_len, p_out_mac);
+//    p_dec = p_decrypt;
+    *dec_len = strlen(p_dec);
     if (ret == SGX_SUCCESS){
     	printf("transfer p_src: %s\n",p_src);
     	printf("AES GCM decryption success!\n");

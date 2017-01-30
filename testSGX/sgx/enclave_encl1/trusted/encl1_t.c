@@ -53,13 +53,13 @@ static sgx_status_t SGX_CDECL sgx_ecall_encl1_AES_GCM_decrypt(void* pms)
 	size_t _len_p_src = _tmp_p_src ? strlen(_tmp_p_src) + 1 : 0;
 	char* _in_p_src = NULL;
 	char* _tmp_p_dec = ms->ms_p_dec;
-	size_t _len_p_dec = 27 * sizeof(*_tmp_p_dec);
+	size_t _len_p_dec = 100 * sizeof(*_tmp_p_dec);
 	char* _in_p_dec = NULL;
 	uint32_t* _tmp_dec_len = ms->ms_dec_len;
 	size_t _len_dec_len = sizeof(*_tmp_dec_len);
 	uint32_t* _in_dec_len = NULL;
 
-	if (27 > (SIZE_MAX / sizeof(*_tmp_p_dec))) {
+	if (100 > (SIZE_MAX / sizeof(*_tmp_p_dec))) {
 		status = SGX_ERROR_INVALID_PARAMETER;
 		goto err;
 	}
