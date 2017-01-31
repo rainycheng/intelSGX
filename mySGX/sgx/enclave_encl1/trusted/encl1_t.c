@@ -17,25 +17,40 @@
 } while (0)
 
 
-typedef struct ms_ecall_encl1_AES_GCM_encrypt_t {
+typedef struct ms_ecall_encl1_AES_GCM_decrypt_t {
 	char* ms_p_src;
 	uint32_t ms_src_len;
-} ms_ecall_encl1_AES_GCM_encrypt_t;
+	char* ms_p_dec;
+	uint32_t* ms_dec_len;
+} ms_ecall_encl1_AES_GCM_decrypt_t;
 
 typedef struct ms_ocall_encl1_sample_t {
 	char* ms_str;
 } ms_ocall_encl1_sample_t;
 
-static sgx_status_t SGX_CDECL sgx_ecall_encl1_AES_GCM_encrypt(void* pms)
+static sgx_status_t SGX_CDECL sgx_ecall_encl1_AES_GCM_decrypt(void* pms)
 {
-	ms_ecall_encl1_AES_GCM_encrypt_t* ms = SGX_CAST(ms_ecall_encl1_AES_GCM_encrypt_t*, pms);
+	ms_ecall_encl1_AES_GCM_decrypt_t* ms = SGX_CAST(ms_ecall_encl1_AES_GCM_decrypt_t*, pms);
 	sgx_status_t status = SGX_SUCCESS;
 	char* _tmp_p_src = ms->ms_p_src;
 	size_t _len_p_src = _tmp_p_src ? strlen(_tmp_p_src) + 1 : 0;
 	char* _in_p_src = NULL;
+	char* _tmp_p_dec = ms->ms_p_dec;
+	size_t _len_p_dec = 100 * sizeof(*_tmp_p_dec);
+	char* _in_p_dec = NULL;
+	uint32_t* _tmp_dec_len = ms->ms_dec_len;
+	size_t _len_dec_len = sizeof(*_tmp_dec_len);
+	uint32_t* _in_dec_len = NULL;
 
-	CHECK_REF_POINTER(pms, sizeof(ms_ecall_encl1_AES_GCM_encrypt_t));
+	if (100 > (SIZE_MAX / sizeof(*_tmp_p_dec))) {
+		status = SGX_ERROR_INVALID_PARAMETER;
+		goto err;
+	}
+
+	CHECK_REF_POINTER(pms, sizeof(ms_ecall_encl1_AES_GCM_decrypt_t));
 	CHECK_UNIQUE_POINTER(_tmp_p_src, _len_p_src);
+	CHECK_UNIQUE_POINTER(_tmp_p_dec, _len_p_dec);
+	CHECK_UNIQUE_POINTER(_tmp_dec_len, _len_dec_len);
 
 	if (_tmp_p_src != NULL) {
 		_in_p_src = (char*)malloc(_len_p_src);
@@ -47,9 +62,33 @@ static sgx_status_t SGX_CDECL sgx_ecall_encl1_AES_GCM_encrypt(void* pms)
 		memcpy((void*)_in_p_src, _tmp_p_src, _len_p_src);
 		_in_p_src[_len_p_src - 1] = '\0';
 	}
-	ecall_encl1_AES_GCM_encrypt((const char*)_in_p_src, ms->ms_src_len);
+	if (_tmp_p_dec != NULL) {
+		if ((_in_p_dec = (char*)malloc(_len_p_dec)) == NULL) {
+			status = SGX_ERROR_OUT_OF_MEMORY;
+			goto err;
+		}
+
+		memset((void*)_in_p_dec, 0, _len_p_dec);
+	}
+	if (_tmp_dec_len != NULL) {
+		if ((_in_dec_len = (uint32_t*)malloc(_len_dec_len)) == NULL) {
+			status = SGX_ERROR_OUT_OF_MEMORY;
+			goto err;
+		}
+
+		memset((void*)_in_dec_len, 0, _len_dec_len);
+	}
+	ecall_encl1_AES_GCM_decrypt((const char*)_in_p_src, ms->ms_src_len, _in_p_dec, _in_dec_len);
 err:
 	if (_in_p_src) free((void*)_in_p_src);
+	if (_in_p_dec) {
+		memcpy(_tmp_p_dec, _in_p_dec, _len_p_dec);
+		free(_in_p_dec);
+	}
+	if (_in_dec_len) {
+		memcpy(_tmp_dec_len, _in_dec_len, _len_dec_len);
+		free(_in_dec_len);
+	}
 
 	return status;
 }
@@ -60,7 +99,7 @@ SGX_EXTERNC const struct {
 } g_ecall_table = {
 	1,
 	{
-		{(void*)(uintptr_t)sgx_ecall_encl1_AES_GCM_encrypt, 0},
+		{(void*)(uintptr_t)sgx_ecall_encl1_AES_GCM_decrypt, 0},
 	}
 };
 

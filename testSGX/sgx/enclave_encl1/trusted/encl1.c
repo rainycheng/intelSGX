@@ -36,10 +36,15 @@ void ecall_encl1_AES_GCM_decrypt(const char *p_src, uint32_t src_len, char *p_de
 	const unsigned char gcm_iv[12] = {
 	        0x99,0xaa,0x3e,0x68,0xed,0x81,0x73,0xa0,0xee,0xd0,0x66,0x84
 	};
+	const unsigned char gcm_aad[16] = {
+	        0x4d,0x23,0xc3,0xce,0xc3,0x34,0xb4,0x9b,0xdb,0x37,0x0c,0x43,
+	        0x7f,0xec,0x78,0xde
+	};
 
 	sgx_status_t ret = SGX_ERROR_UNEXPECTED;
 	sgx_aes_gcm_128bit_key_t *p_key;
-	uint8_t *pest_src = "My first encryption test!";
+	//the plain text length must be no less than 16 bytes, otherwise the description will fail
+	uint8_t *pest_src = "set 0 0 0 1fnaionglsa";
 //	uint32_t src_len;
 	uint8_t *p_dst;
 	uint8_t *p_iv;
@@ -54,8 +59,8 @@ void ecall_encl1_AES_GCM_decrypt(const char *p_src, uint32_t src_len, char *p_de
     p_dst = (uint8_t *)malloc(sizeof(uint8_t)*1000);
     p_iv = gcm_iv;
     iv_len = 12;
-    p_aad = NULL;
-    aad_len = 0;
+    p_aad = gcm_aad;
+    aad_len = 16;
     p_out_mac = (sgx_aes_gcm_128bit_tag_t *)malloc(sizeof(sgx_aes_gcm_128bit_tag_t)*1000);
 
     ret = sgx_rijndael128GCM_encrypt(p_key, pest_src, strlen(pest_src), p_dst, p_iv, iv_len, p_aad, aad_len, p_out_mac);

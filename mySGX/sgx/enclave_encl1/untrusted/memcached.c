@@ -4513,20 +4513,25 @@ void my_aes_gcm_encrypt(char *p_src, uint32_t src_len, char *p_dst, uint32_t *ds
     };
 
     EVP_CIPHER_CTX *ctx;
-    sgx_aes_gcm_128bit_tag_t p_out_mac;
-    
+    sgx_aes_gcm_128bit_tag_t *p_out_mac;
+    p_out_mac = (sgx_aes_gcm_128bit_tag_t *)malloc(sizeof(sgx_aes_gcm_128bit_tag_t)*1000);
     ctx = EVP_CIPHER_CTX_new();
     EVP_EncryptInit_ex(ctx, EVP_aes_128_gcm(), NULL, NULL, NULL);
     EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, sizeof(gcm_iv), NULL);
     EVP_EncryptInit_ex(ctx, NULL, NULL, gcm_key, gcm_iv);
     EVP_EncryptUpdate(ctx, p_dst, dst_len, p_src, strlen(p_src));
 
-//        printf("Ciphertext:\n");
-//        BIO_dump_fp(stdout, p_dst, *dst_len);
-//        printf("\n");
+        printf("Ciphertext:\n");
+        BIO_dump_fp(stdout, p_dst, *dst_len);
+        printf("dst_len:%d\n",*dst_len);
     EVP_EncryptFinal_ex(ctx, p_dst, dst_len);
-    EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, &p_out_mac);
+    EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, p_out_mac);
     EVP_CIPHER_CTX_free(ctx);
+
+    
+        printf("Ciphertext:\n");
+        BIO_dump_fp(stdout, p_dst, strlen(p_dst));
+        printf("dst_len:%d\n",strlen(p_dst));
 }
 
 /*
@@ -4595,16 +4600,29 @@ static enum try_read_result try_read_network(conn *c) {
                 continue;
             } else {
             	sgx_buf = c->rbuf + sgx_buf_remain;
-            	char *sgx_buf_enc;
-                uint32_t enc_len, dec_len;
+            	char *sgx_buf_enc,*sgx_out;
+                uint32_t enc_len, dec_len=0;
                 sgx_buf_enc = (char *)malloc(sizeof(char)*1000);
-           
-            	my_aes_gcm_encrypt(sgx_buf, strlen(sgx_buf), sgx_buf_enc, &enc_len);
-            	//when enclave returns, the decrypted string is directly copied into sgx_buf
+                printf("sgx_buf:%s\n",sgx_buf);
+                printf("sgx_buf_len:%d\n",strlen(sgx_buf)); 
+            	//my_aes_gcm_encrypt(sgx_buf, strlen(sgx_buf), sgx_buf_enc, &enc_len);
+            	printf("enc_len:%d\n",enc_len);
+                printf("Cipher txt:\n");
+                BIO_dump_fp(stdout, sgx_buf_enc, strlen(sgx_buf_enc));
+                printf("\n");
+                sgx_out = (char *)malloc(sizeof(char)*1000);
+                //when enclave returns, the decrypted string is directly copied into sgx_buf
                 //to reduce extra copy overhead.
-                printf("Application encrypt success:%s\n",sgx_buf_enc);
-                ecall_encl1_AES_GCM_decrypt(global_eid, sgx_buf_enc, enc_len, sgx_buf, &dec_len);
-                printf("SGX Enclave decypt success: %s\n",sgx_buf);
+                printf("p_src:%s\n",sgx_buf_enc);
+                sgx_status_t ret = SGX_ERROR_UNEXPECTED;
+                ret = ecall_encl1_AES_GCM_decrypt(global_eid, sgx_buf, strlen(sgx_buf), sgx_out, &dec_len);
+                if (ret == SGX_SUCCESS){
+                printf("SGX Enclave decypt success: %s\n",sgx_out);
+                printf("dec_len:%d\n",dec_len);
+                }
+                else{
+                    print_error_message(ret);
+                }
                 break;
             }
         }

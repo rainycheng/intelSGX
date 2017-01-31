@@ -213,7 +213,10 @@ uint8_t gcm_key[16]= {
 uint8_t gcm_iv[12] = {
         0x99,0xaa,0x3e,0x68,0xed,0x81,0x73,0xa0,0xee,0xd0,0x66,0x84
 };
-
+uint8_t gcm_aad[16] = {
+        0x4d,0x23,0xc3,0xce,0xc3,0x34,0xb4,0x9b,0xdb,0x37,0x0c,0x43,
+        0x7f,0xec,0x78,0xde
+};
 /* Application entry */
 int SGX_CDECL main(int argc, char *argv[])
 {
@@ -261,53 +264,59 @@ int SGX_CDECL main(int argc, char *argv[])
 //	p_key = gcm_key;
     p_iv = gcm_iv;
     iv_len = 12;
-    p_aad = NULL;
-    aad_len = 0;
+    p_aad = gcm_aad;
+    aad_len = 16;
     p_out_mac = (sgx_aes_gcm_128bit_tag_t *)malloc(sizeof(sgx_aes_gcm_128bit_tag_t)*1000);
-    char *p_src = "My first encryption test!";
+    // the plain text length must be no less than 16 bytes, otherwise the description will fail
+    char *p_src = "set 0 0 0 1fnaionglsa";
 
     p_dst = (uint8_t *)malloc(sizeof(uint8_t)*1000);
 //    ret = sgx_rijndael128GCM_encrypt(&gcm_key, p_src, strlen(p_src), p_dst, p_iv, iv_len, p_aad, aad_len, p_out_mac);
 
-    EVP_CIPHER_CTX *ctx;
-    int outlen, tmplen;
-    unsigned char outbuf[1048576];
-//        printf("AES GCM Encrypt:\n");
-//        printf("Plaintext:\n");
-//        BIO_dump_fp(stdout, gcm_pt, pt_len);
-//        printf("gcm_pt size: %d\n",pt_len);
-
-ctx = EVP_CIPHER_CTX_new();
-    /* Set cipher type and mode */
-    EVP_EncryptInit_ex(ctx, EVP_aes_128_gcm(), NULL, NULL, NULL);
-    /* Set IV length if default 96 bits is not appropriate */
-    EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, sizeof(gcm_iv), NULL);
-    /* Initialise key and IV */
-    EVP_EncryptInit_ex(ctx, NULL, NULL, gcm_key, gcm_iv);
-    /* Zero or more calls to specify any AAD */
-//    EVP_EncryptUpdate(ctx, NULL, &outlen, NULL, 0);
-    /* Encrypt plaintext */
-    EVP_EncryptUpdate(ctx, p_dst, &outlen, p_src, strlen(p_src));
-    /* Output encrypted block */
-        printf("Ciphertext:\n");
-        BIO_dump_fp(stdout, p_dst, outlen);
-    /* Finalise: note get no output for GCM */
-    EVP_EncryptFinal_ex(ctx, p_dst, &outlen);
-    /* Get tag */
-    EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, p_out_mac);
-    /* Output tag */
-//        printf("Tag:\n");
-//        BIO_dump_fp(stdout, p_out_mac, 16);
-    EVP_CIPHER_CTX_free(ctx);
+     EVP_CIPHER_CTX *ctx;
+     int outlen, tmplen;
+     unsigned char outbuf[1048576];
+ //        printf("AES GCM Encrypt:\n");
+ //        printf("Plaintext:\n");
+ //        BIO_dump_fp(stdout, gcm_pt, pt_len);
+ //        printf("gcm_pt size: %d\n",pt_len);
+ 
+ ctx = EVP_CIPHER_CTX_new();
+     /* Set cipher type and mode */
+     EVP_EncryptInit_ex(ctx, EVP_aes_128_gcm(), NULL, NULL, NULL);
+     /* Set IV length if default 96 bits is not appropriate */
+     EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, sizeof(gcm_iv), NULL);
+     /* Initialise key and IV */
+     EVP_EncryptInit_ex(ctx, NULL, NULL, gcm_key, gcm_iv);
+     /* Zero or more calls to specify any AAD */
+     EVP_EncryptUpdate(ctx, NULL, &outlen, gcm_aad, sizeof(gcm_aad));
+     /* Encrypt plaintext */
+     EVP_EncryptUpdate(ctx, p_dst, &outlen, p_src, strlen(p_src));
+     /* Output encrypted block */
+         printf("Ciphertext:\n");
+         BIO_dump_fp(stdout, p_dst, outlen);
+     /* Finalise: note get no output for GCM */
+     EVP_EncryptFinal_ex(ctx, p_dst, &outlen);
+     /* Get tag */
+     EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, p_out_mac);
+     /* Output tag */
+ //        printf("Tag:\n");
+ //        BIO_dump_fp(stdout, p_out_mac, 16);
+     EVP_CIPHER_CTX_free(ctx);
+ 
+  printf("Ciphertext:\n");
+  BIO_dump_fp(stdout, p_dst, strlen(p_dst));
+    printf("outlen:%d\n",outlen);
+   printf("strlen(p_dst):%d\n",strlen(p_dst));
 
     uint32_t dec_len=0;
     char *p_dec;
     p_dec = (char *)malloc(sizeof(char)*1000);
-    ret = ecall_encl1_AES_GCM_decrypt(global_eid, p_dst, strlen(p_dst), p_dst, &dec_len);
+    ret = ecall_encl1_AES_GCM_decrypt(global_eid, p_dst, strlen(p_dst), p_dec, &dec_len);
     if(ret == SGX_SUCCESS){
-    	printf("Decrypt success: %s\n", p_dst);
+    	printf("Decrypt success: %s\n", p_dec);
     	printf("Descrpt length: %d\n", dec_len);
-    	printf("strlen(p_dec):%d\n", strlen(p_dst));
+    	printf("strlen(p_dec):%d\n", strlen(p_dec));
     }
 
     sgx_destroy_enclave(global_eid);
