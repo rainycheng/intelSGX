@@ -2800,6 +2800,23 @@ static void _store_item_copy_data(int comm, item *old_it, item *new_it, item *ad
             memcpy(ITEM_data(new_it) + add_it->nbytes - 2 /* CRLF */, ITEM_data(old_it), old_it->nbytes);
         }
     }
+/* sgx code begin */
+    sgx_status_t ret = SGX_ERROR_UNEXPECTED;
+    int cyx_flag, cyx_vlen;
+    char *sgx_buf;
+    cyx_flag = 0;
+//    cyx_vlen = 0;
+    sgx_buf = ITEM_data(old_it);
+    cyx_vlen = strlen(sgx_buf);
+    ret = ecall_encl1_update_operation(global_eid, sgx_buf, &cyx_flag, &cyx_vlen, sgx_buf, sgx_buf);
+    if (ret == SGX_SUCCESS){
+        printf("SGX Enclave decypt success.\n");
+      //  printf("dec_len:%d\n",dec_len);
+    }
+    else{
+        print_error_message(ret);
+    }
+/* sgx code end */    
 }
 
 /*
@@ -3819,6 +3836,24 @@ enum delta_result_type do_add_delta(conn *c, const char *key, const size_t nkey,
         return NON_NUMERIC;
     }
 
+/* begin sgx code */
+    sgx_status_t ret = SGX_ERROR_UNEXPECTED;
+    int cyx_flag, cyx_vlen;
+    char *sgx_buf;
+    cyx_flag = 0;
+//    cyx_vlen = 0;
+    sgx_buf = ptr;
+    cyx_vlen = strlen(sgx_buf);
+    ret = ecall_encl1_update_operation(global_eid, sgx_buf, &cyx_flag, &cyx_vlen, sgx_buf, sgx_buf);
+    if (ret == SGX_SUCCESS){
+        printf("SGX Enclave arithmetic success.\n");
+      //  printf("dec_len:%d\n",dec_len);
+    }
+    else{
+        print_error_message(ret);
+    }
+/* end sgx code*/
+
     if (incr) {
         value += delta;
         MEMCACHED_COMMAND_INCR(c->sfd, ITEM_key(it), it->nkey, value);
@@ -4531,7 +4566,7 @@ void my_aes_gcm_encrypt(char *p_src, uint32_t src_len, char *p_dst, uint32_t *ds
     
         printf("Ciphertext:\n");
         BIO_dump_fp(stdout, p_dst, strlen(p_dst));
-        printf("dst_len:%d\n",strlen(p_dst));
+        printf("dst_len:%d\n",*dst_len);
 }
 
 /*
@@ -4550,9 +4585,9 @@ static enum try_read_result try_read_network(conn *c) {
     enum try_read_result gotdata = READ_NO_DATA_RECEIVED;
     int res;
     int num_allocs = 0;
-    char *sgx_buf;
-    int sgx_buf_remain;
-    int sgx_buf_len;
+//    char *sgx_buf;
+//    int sgx_buf_remain;
+//    int sgx_buf_len;
     assert(c != NULL);
 
     if (c->rcurr != c->rbuf) {
@@ -4561,8 +4596,8 @@ static enum try_read_result try_read_network(conn *c) {
         c->rcurr = c->rbuf;
     }
 
-    sgx_buf_remain = c->rbytes;
-    sgx_buf_len = 0;
+//    sgx_buf_remain = c->rbytes;
+//    sgx_buf_len = 0;
 
     while (1) {
         if (c->rbytes >= c->rsize) {
@@ -4595,34 +4630,41 @@ static enum try_read_result try_read_network(conn *c) {
             pthread_mutex_unlock(&c->thread->stats.mutex);
             gotdata = READ_DATA_RECEIVED;
             c->rbytes += res;
-            sgx_buf_len += res;
+//            sgx_buf_len += res;
             if (res == avail) {
                 continue;
             } else {
-            	sgx_buf = c->rbuf + sgx_buf_remain;
-            	char *sgx_buf_enc,*sgx_out;
-                uint32_t enc_len, dec_len=0;
-                sgx_buf_enc = (char *)malloc(sizeof(char)*1000);
-                printf("sgx_buf:%s\n",sgx_buf);
-                printf("sgx_buf_len:%d\n",strlen(sgx_buf)); 
-            	//my_aes_gcm_encrypt(sgx_buf, strlen(sgx_buf), sgx_buf_enc, &enc_len);
-            	printf("enc_len:%d\n",enc_len);
-                printf("Cipher txt:\n");
-                BIO_dump_fp(stdout, sgx_buf_enc, strlen(sgx_buf_enc));
-                printf("\n");
-                sgx_out = (char *)malloc(sizeof(char)*1000);
+//            	sgx_buf = c->rbuf + sgx_buf_remain;
+//            	char *sgx_buf_enc,*sgx_out;
+//                uint32_t *enc_len, dec_len=0;
+//                sgx_buf_enc = (char *)malloc(sizeof(char)*1000);
+//                printf("sgx_buf:%s\n",sgx_buf);
+//                printf("sgx_buf_len:%d\n",strlen(sgx_buf)); 
+//                enc_len = (uint32_t *)malloc(sizeof(uint32_t));
+//            	my_aes_gcm_encrypt(sgx_buf, strlen(sgx_buf), sgx_buf_enc, enc_len);
+//            	printf("enc_len:%d\n",*enc_len);
+//                printf("Cipher txt:\n");
+//                BIO_dump_fp(stdout, sgx_buf_enc, strlen(sgx_buf_enc));
+//                printf("\n");
+//                sgx_out = (char *)malloc(sizeof(char)*1000);
                 //when enclave returns, the decrypted string is directly copied into sgx_buf
                 //to reduce extra copy overhead.
-                printf("p_src:%s\n",sgx_buf_enc);
-                sgx_status_t ret = SGX_ERROR_UNEXPECTED;
-                ret = ecall_encl1_AES_GCM_decrypt(global_eid, sgx_buf, strlen(sgx_buf), sgx_out, &dec_len);
-                if (ret == SGX_SUCCESS){
-                printf("SGX Enclave decypt success: %s\n",sgx_out);
-                printf("dec_len:%d\n",dec_len);
-                }
-                else{
-                    print_error_message(ret);
-                }
+                //printf("p_src:%s\n",sgx_buf_enc);
+//                sgx_status_t ret = SGX_ERROR_UNEXPECTED;
+//                ret = ecall_encl1_AES_GCM_decrypt(global_eid, sgx_buf, strlen(sgx_buf), sgx_out, &dec_len);
+//                int cyx_flag, cyx_vlen;
+//                cyx_flag = 0;
+//                cyx_vlen = strlen(sgx_buf);
+//                printf("begin ecall update operation!\n");
+//                printf("sgx_buf:%s\n",sgx_buf);
+//                ret = ecall_encl1_update_operation(global_eid, sgx_buf, &cyx_flag, &cyx_vlen, sgx_buf, sgx_buf);
+//                if (ret == SGX_SUCCESS){
+//                printf("SGX Enclave decypt success: %s\n",sgx_out);
+//                printf("dec_len:%d\n",dec_len);
+//                }
+//                else{
+//                    print_error_message(ret);
+//                }
                 break;
             }
         }
