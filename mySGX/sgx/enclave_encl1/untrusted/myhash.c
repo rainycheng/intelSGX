@@ -11,19 +11,21 @@
 #include <assert.h>
 #include <sys/time.h>
 #include "murmur3_hash.h"
-#include "jenkins_hash.h"
+//#include "jenkins_hash.h"
 
 typedef  unsigned long  int  ub4;   /* unsigned 4-byte quantities */
 typedef  unsigned       char ub1;   /* unsigned 1-byte quantities */
 
 /* how many powers of 2's worth of buckets we use */
-unsigned int hashpower = 16;
+unsigned int hashpower = 20;
 
 #define hashsize(n) ((ub4)1<<(n))
 #define hashmask(n) (hashsize(n)-1)
 #define ITEM_key(item) (((char*)&((item)->data)) \
          + (((item)->it_flags & ITEM_CAS) ? sizeof(uint64_t) : 0))
 
+#define NKeys 10000000
+#define NTest 200000
 typedef struct _stritem {
     /* Protected by LRU locks */
 //    struct _stritem *next;
@@ -37,7 +39,7 @@ typedef struct _stritem {
 //    uint8_t         nsuffix;    /* length of flags-and-length string */
 //    uint8_t         it_flags;   /* ITEM_* above */
 //    uint8_t         slabs_clsid;/* which slab class we're in */
-    char key[256];
+    char *key;
     uint32_t         nkey;       /* key length, w/terminating null and padding */
     uint32_t        vn;         /* version number */ 
     /* this odd type prevents type-punning issues when we do
@@ -167,59 +169,124 @@ void assoc_delete(const char *key, const size_t nkey, const uint32_t hv) {
     assert(*before != 0);
 }
 
+int    time_substract(struct timeval *result, struct timeval *begin,struct timeval *end)
+{
 
+    if(begin->tv_sec > end->tv_sec)    
+      return -1;
+
+    if((begin->tv_sec == end->tv_sec) && (begin->tv_usec > end->tv_usec))
+      return -2;
+
+    result->tv_sec    = (end->tv_sec - begin->tv_sec);
+    result->tv_usec    = (end->tv_usec - begin->tv_usec);
+    if(result->tv_usec < 0)
+    {
+        result->tv_sec--;
+        result->tv_usec += 1000000;
+    }
+    return 0;
+}
 
 int main(){
     int randkey,i;
-    int keys[10000];
-    char akeys[10000][256];
+    int keys[NTest];
+    char akeys[NTest][30];
+    char buf[255];
     item *it_new, *it;
     uint32_t hv;
+    FILE *fd,*fd1;
 
-    struct timeval t_start,t_end;
+    struct timeval t_start,t_end,t_diff;
 //gettimeofday(&t_start, NULL);
-    assoc_init(16);
-    for(i=0;i<10000;i++){
+    assoc_init(hashpower);
+/*
+    sprintf(buf, "%ld", rand());
+    printf("%s %d\n",buf,strlen(buf));
+    fd1=fopen("test.txt","w"); 
+    fprintf(fd1,"%s\n",buf);
+    fclose(fd1);
+    fd1=fopen("test.txt","r");
+    fscanf(fd1, "%s", buf);
+    printf("%s %d\n",buf,strlen(buf));
+*/
+printf("Very efficient!\n");
+//    fd = fopen("keys.txt","w");
+    for(i=0;i<NKeys;i++){
+       it_new = (item *)malloc(sizeof(item));
+       sprintf(buf, "%ld", rand());
+//       printf("%s\n",buf);
+//       fprintf(fd,"%s\n",buf);
+       it_new->key = (char *)malloc(sizeof(char)*strlen(buf));
+       it_new->nkey = strlen(buf);
+       it_new->vn = 0;
+       memcpy(it_new->key,buf,strlen(buf));
+       hv = MurmurHash3_x86_32(it_new->key,it_new->nkey);
+       it = assoc_find(it_new->key,it_new->nkey, hv);
+       if(it==NULL){
+         assoc_insert(it_new,hv);
+//         printf("insert success!\n");  
+       }else{
+         free(it_new->key);
+         free(it_new);
+       }
+    }
+//    fclose(fd);
+//    fd = fopen("keys.txt","r");
+//    fscanf(fd,"%s",buf);
+//    printf("%s\n",buf);
+    for(i=0;i<NTest;i++){
     randkey = rand();
 //    printf("rand():%d\n",randkey);
     keys[i] = randkey;
-    it_new = (item *)malloc(sizeof(item));
-    sprintf(akeys[i],"%d",randkey);
+//    it_new = (item *)malloc(sizeof(item));
+//    fscanf(fd,"%s",buf);
+    sprintf(akeys[i],"%ld",randkey);
 //    it_new->key = &akeys[i];
 //    printf("akeys[%d]:%s\n",i,akeys[i]);
 //    printf("sizeof():%d\n",sizeof(akeys[i]));
-    memcpy(it_new->key,akeys[i],sizeof(akeys[i]));
-    it_new->nkey = sizeof(akeys[i]);
-    it_new->vn = 0;
+//    memcpy(it_new->key,akeys[i],sizeof(akeys[i]));
+//    it_new->nkey = sizeof(akeys[i]);
+//    it_new->vn = 0;
 //    printf("item:%s,%d\n",it_new->key, it_new->nkey);
-    hv = MurmurHash3_x86_32(it_new->key, it_new->nkey);
-    it = assoc_find(it_new->key, it_new->nkey, hv);
-    if(it){
+//    hv = MurmurHash3_x86_32(it_new->key, it_new->nkey);
+//    it = assoc_find(it_new->key, it_new->nkey, hv);
+//    if(it){
 //        printf("Find the item key:%s\n", it->key);
-    }
-    else{
-        assoc_insert(it_new,hv);
+//    }
+//    else{
+//        assoc_insert(it_new,hv);
 //        printf("insert item: %s\n", it_new->key);
 //        printf("hv:%d\n",hv);
+//    }
     }
-    }
+//    fclose(fd);
+
+    memset(&t_start,0,sizeof(struct timeval));
+    memset(&t_end,0,sizeof(struct timeval));
+    memset(&t_diff,0,sizeof(struct timeval));
+
 gettimeofday(&t_start, NULL);
-    for(i=0;i<10000;i++){
+int j=0;
+    for(i=0;i<NTest;i++){
 //        sprintf(akey,"%d",keys[i]);
-        hv = MurmurHash3_x86_32(akeys[i],sizeof(akeys[i]));
-        it=assoc_find(akeys[i], sizeof(akeys[i]),hv);
+        hv = MurmurHash3_x86_32(akeys[i],strlen(akeys[i]));
+        it=assoc_find(akeys[i], strlen(akeys[i]),hv);
         if(it==NULL){
 //            printf("Failed: can not find key: %s\n",akeys[i]);
 //            printf("hv:%d\n",hv);
-        printf("Not Find!\n");
+        //printf("Not Find!\n");
+           j++;
         }
         else{
 //            printf("Find!\n");
         }
     }
-printf("Very efficient!\n");
 gettimeofday(&t_end, NULL);
-printf("time cost is: %u s or %u us.\n", t_end.tv_sec-t_start.tv_sec, t_end.tv_usec-t_start.tv_usec);
-    printf("Success\n"); 
+printf("Very efficient!\n");
+time_substract(&t_diff,&t_start,&t_end);
+printf("time cost is: %u s, %u us.\n", t_diff.tv_sec, t_diff.tv_usec);
+printf("Ntest: %d keys not find!\n",j);    
+printf("Success\n"); 
     return 0;
 }
