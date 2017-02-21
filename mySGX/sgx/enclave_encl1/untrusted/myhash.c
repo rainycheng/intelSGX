@@ -24,7 +24,7 @@ int collision=0;
 #define ITEM_key(item) (((char*)&((item)->data)) \
          + (((item)->it_flags & ITEM_CAS) ? sizeof(uint64_t) : 0))
 
-#define NKeys 1000000
+long int NKeys=1000000;
 #define NTest 100000
 typedef struct _stritem {
     /* Protected by LRU locks */
@@ -188,7 +188,7 @@ int    time_substract(struct timeval *result, struct timeval *begin,struct timev
     return 0;
 }
 
-int main(){
+int main(int argc, char *argv[]){
     int randkey,i;
     int keys[NTest];
     char akeys[NTest][30];
@@ -198,6 +198,8 @@ int main(){
     FILE *fd,*fd1;
     struct timeval t_start,t_end,t_diff;
 //gettimeofday(&t_start, NULL);
+    hashpower = atoi(argv[1]);
+    NKeys = atoi(argv[2]);
     assoc_init(hashpower);
 /*
     sprintf(buf, "%ld", rand());
