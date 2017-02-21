@@ -17,15 +17,15 @@ typedef  unsigned long  int  ub4;   /* unsigned 4-byte quantities */
 typedef  unsigned       char ub1;   /* unsigned 1-byte quantities */
 
 /* how many powers of 2's worth of buckets we use */
-unsigned int hashpower = 20;
-
+unsigned int hashpower = 24;
+int collision=0;
 #define hashsize(n) ((ub4)1<<(n))
 #define hashmask(n) (hashsize(n)-1)
 #define ITEM_key(item) (((char*)&((item)->data)) \
          + (((item)->it_flags & ITEM_CAS) ? sizeof(uint64_t) : 0))
 
-#define NKeys 10000000
-#define NTest 200000
+#define NKeys 1000000
+#define NTest 2
 typedef struct _stritem {
     /* Protected by LRU locks */
 //    struct _stritem *next;
@@ -84,10 +84,10 @@ item *assoc_find(const char *key, const size_t nkey, const uint32_t hv) {
 //    } else {
         it = primary_hashtable[hv & hashmask(hashpower)];
 //    }
-
     item *ret = NULL;
     int depth = 0;
     while (it) {
+        collision++;
         if ((nkey == it->nkey) && (memcmp(key, it->key, nkey) == 0)) {
             ret = it;
             break;
@@ -196,7 +196,6 @@ int main(){
     item *it_new, *it;
     uint32_t hv;
     FILE *fd,*fd1;
-
     struct timeval t_start,t_end,t_diff;
 //gettimeofday(&t_start, NULL);
     assoc_init(hashpower);
@@ -210,6 +209,7 @@ int main(){
     fscanf(fd1, "%s", buf);
     printf("%s %d\n",buf,strlen(buf));
 */
+collision=0;
 printf("Very efficient!\n");
 //    fd = fopen("keys.txt","w");
     for(i=0;i<NKeys;i++){
@@ -229,6 +229,7 @@ printf("Very efficient!\n");
        }else{
          free(it_new->key);
          free(it_new);
+//        collision++;
        }
     }
 //    fclose(fd);
@@ -287,6 +288,6 @@ printf("Very efficient!\n");
 time_substract(&t_diff,&t_start,&t_end);
 printf("time cost is: %u s, %u us.\n", t_diff.tv_sec, t_diff.tv_usec);
 printf("Ntest: %d keys not find!\n",j);    
-printf("Success\n"); 
+printf("Number of collisions:%d\n",collision); 
     return 0;
 }
