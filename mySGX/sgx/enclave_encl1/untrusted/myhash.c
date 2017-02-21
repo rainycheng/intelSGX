@@ -25,7 +25,7 @@ int collision=0;
          + (((item)->it_flags & ITEM_CAS) ? sizeof(uint64_t) : 0))
 
 #define NKeys 1000000
-#define NTest 2
+#define NTest 100000
 typedef struct _stritem {
     /* Protected by LRU locks */
 //    struct _stritem *next;
