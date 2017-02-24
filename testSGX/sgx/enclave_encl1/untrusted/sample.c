@@ -282,7 +282,7 @@ gettimeofday(&t_start, NULL);
 //    char *sgx_value;
 //    sgx_value = (char *)malloc(sizeof(char)*strlen(sgx_buf));
 //    memcpy(sgx_value, sgx_buf, strlen(sgx_buf));
-    ret = ecall_encl1_update_operation(global_eid, sgx_value, &cyx_flag, &cyx_vlen, sgx_value, sgx_value);
+    ret = ecall_encl1_update_operation(global_eid, sgx_value, &cyx_flag, &cyx_vlen, sgx_value, sgx_value,pow_size*8);
 //    printf("ecall return!\n");
 gettimeofday(&t_end, NULL);
     if (ret == SGX_SUCCESS){

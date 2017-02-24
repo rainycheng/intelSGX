@@ -212,7 +212,7 @@ void encl1_AES_GCM_decrypt(char *p_src,uint32_t src_len,char *p_des,uint32_t des
 
 }
 
-void ecall_encl1_update_operation(char *key, int *flag, int* vlen, char *value, char *value_update)
+void ecall_encl1_update_operation(char *key, int *flag, int* vlen, char *value, char *value_update,int str_len)
 {
     char *value_plain, *value_encrypt;
     sgx_aes_gcm_128bit_tag_t *p_mac;
