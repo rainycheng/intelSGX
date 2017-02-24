@@ -107,8 +107,7 @@ static sgx_status_t SGX_CDECL sgx_ecall_encl1_update_operation(void* pms)
 	ms_ecall_encl1_update_operation_t* ms = SGX_CAST(ms_ecall_encl1_update_operation_t*, pms);
 	sgx_status_t status = SGX_SUCCESS;
 	char* _tmp_key = ms->ms_key;
-	int _tmp_str_len = ms->ms_str_len;
-	size_t _len_key = _tmp_str_len;
+	size_t _len_key = _tmp_key ? strlen(_tmp_key) + 1 : 0;
 	char* _in_key = NULL;
 	int* _tmp_flag = ms->ms_flag;
 	size_t _len_flag = sizeof(*_tmp_flag);
@@ -117,10 +116,11 @@ static sgx_status_t SGX_CDECL sgx_ecall_encl1_update_operation(void* pms)
 	size_t _len_vlen = sizeof(*_tmp_vlen);
 	int* _in_vlen = NULL;
 	char* _tmp_value = ms->ms_value;
+	int _tmp_str_len = ms->ms_str_len;
 	size_t _len_value = _tmp_str_len;
 	char* _in_value = NULL;
 	char* _tmp_value_update = ms->ms_value_update;
-	size_t _len_value_update = _tmp_str_len;
+	size_t _len_value_update = _tmp_value_update ? strlen(_tmp_value_update) + 1 : 0;
 	char* _in_value_update = NULL;
 
 	CHECK_REF_POINTER(pms, sizeof(ms_ecall_encl1_update_operation_t));
@@ -138,6 +138,7 @@ static sgx_status_t SGX_CDECL sgx_ecall_encl1_update_operation(void* pms)
 		}
 
 		memcpy(_in_key, _tmp_key, _len_key);
+		_in_key[_len_key - 1] = '\0';
 	}
 	if (_tmp_flag != NULL) {
 		_in_flag = (int*)malloc(_len_flag);
@@ -174,6 +175,7 @@ static sgx_status_t SGX_CDECL sgx_ecall_encl1_update_operation(void* pms)
 		}
 
 		memcpy(_in_value_update, _tmp_value_update, _len_value_update);
+		_in_value_update[_len_value_update - 1] = '\0';
 	}
 	ecall_encl1_update_operation(_in_key, _in_flag, _in_vlen, _in_value, _in_value_update, _tmp_str_len);
 err:
