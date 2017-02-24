@@ -9,11 +9,12 @@ enclave {
      */
     untrusted {
         void ocall_encl1_sample([in, string] const char *str);
+        //void ocall_encl1_yuxia([in, string] const char *str);
     };
 
-
     trusted {
-    	    public int ecall_encl1_sample();
     	    public void ecall_encl1_AES_GCM_decrypt([in,string]const char *p_src, uint32_t src_len, [out,count=100]char *p_dec, [out]uint32_t *dec_len);
+
+            public void ecall_encl1_update_operation([in,string]char *key, [in]int *flag, [in]int *vlen, [in,out,string]char *value, [in,out,string]char *value_update);
     };
 };

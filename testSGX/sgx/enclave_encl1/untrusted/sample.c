@@ -5,6 +5,7 @@
 #include <pwd.h>
 #include <libgen.h>
 #include <stdlib.h>
+#include <sys/time.h>
 
 # define MAX_PATH FILENAME_MAX
 
@@ -217,6 +218,26 @@ uint8_t gcm_aad[16] = {
         0x4d,0x23,0xc3,0xce,0xc3,0x34,0xb4,0x9b,0xdb,0x37,0x0c,0x43,
         0x7f,0xec,0x78,0xde
 };
+
+int    time_substract(struct timeval *result, struct timeval *begin,struct timeval *end)
+{
+
+    if(begin->tv_sec > end->tv_sec)
+      return -1;
+
+    if((begin->tv_sec == end->tv_sec) && (begin->tv_usec > end->tv_usec))
+      return -2;
+
+    result->tv_sec    = (end->tv_sec - begin->tv_sec);
+    result->tv_usec    = (end->tv_usec - begin->tv_usec);
+    if(result->tv_usec < 0)
+    {
+        result->tv_sec--;
+        result->tv_usec += 1000000;
+    }
+    return 0;
+}
+
 /* Application entry */
 int SGX_CDECL main(int argc, char *argv[])
 {
@@ -239,87 +260,36 @@ int SGX_CDECL main(int argc, char *argv[])
     }
  
     sgx_status_t ret = SGX_ERROR_UNEXPECTED;
-    int ecall_return = 0;
 
-    ret = ecall_encl1_sample(global_eid, &ecall_return);
-    if (ret != SGX_SUCCESS)
-        abort();
+struct timeval t_start,t_end,t_diff;
+    memset(&t_start,0,sizeof(struct timeval));
+    memset(&t_end,0,sizeof(struct timeval));
+    memset(&t_diff,0,sizeof(struct timeval));
 
-    if (ecall_return == 0) {
-      printf("Application ran with success\n");
+gettimeofday(&t_start, NULL);
+
+    ret = SGX_ERROR_UNEXPECTED;
+    int cyx_flag, cyx_vlen;
+    char *sgx_buf="My first sgx time test program!";
+    cyx_flag = 0;
+    cyx_vlen = strlen(sgx_buf);
+    char *sgx_value;
+    sgx_value = (char *)malloc(sizeof(char)*strlen(sgx_buf));
+    memcpy(sgx_value, sgx_buf, strlen(sgx_buf));
+    ret = ecall_encl1_update_operation(global_eid, sgx_value, &cyx_flag, &cyx_vlen, sgx_value, sgx_value);
+//    printf("ecall return!\n");
+gettimeofday(&t_end, NULL);
+    if (ret == SGX_SUCCESS){
+        printf("SGX Enclave update operation success.\n");
+      //  printf("dec_len:%d\n",dec_len);
     }
-    else
-    {
-        printf("Application failed %d \n", ecall_return);
+    else{
+        print_error_message(ret);
     }
-    
-	sgx_aes_gcm_128bit_key_t p_key="my sgx key";
-    uint8_t *p_dst;
-	uint8_t *p_iv;
-	uint32_t iv_len;
-	uint8_t *p_aad;
-	uint32_t aad_len;
-	sgx_aes_gcm_128bit_tag_t *p_out_mac;
-
-//	p_key = gcm_key;
-    p_iv = gcm_iv;
-    iv_len = 12;
-    p_aad = gcm_aad;
-    aad_len = 16;
-    p_out_mac = (sgx_aes_gcm_128bit_tag_t *)malloc(sizeof(sgx_aes_gcm_128bit_tag_t)*1000);
-    // the plain text length must be no less than 16 bytes, otherwise the description will fail
-    char *p_src = "set 0 0 0 1fnaionglsa";
-
-    p_dst = (uint8_t *)malloc(sizeof(uint8_t)*1000);
-//    ret = sgx_rijndael128GCM_encrypt(&gcm_key, p_src, strlen(p_src), p_dst, p_iv, iv_len, p_aad, aad_len, p_out_mac);
-
-     EVP_CIPHER_CTX *ctx;
-     int outlen, tmplen;
-     unsigned char outbuf[1048576];
- //        printf("AES GCM Encrypt:\n");
- //        printf("Plaintext:\n");
- //        BIO_dump_fp(stdout, gcm_pt, pt_len);
- //        printf("gcm_pt size: %d\n",pt_len);
- 
- ctx = EVP_CIPHER_CTX_new();
-     /* Set cipher type and mode */
-     EVP_EncryptInit_ex(ctx, EVP_aes_128_gcm(), NULL, NULL, NULL);
-     /* Set IV length if default 96 bits is not appropriate */
-     EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, sizeof(gcm_iv), NULL);
-     /* Initialise key and IV */
-     EVP_EncryptInit_ex(ctx, NULL, NULL, gcm_key, gcm_iv);
-     /* Zero or more calls to specify any AAD */
-     EVP_EncryptUpdate(ctx, NULL, &outlen, gcm_aad, sizeof(gcm_aad));
-     /* Encrypt plaintext */
-     EVP_EncryptUpdate(ctx, p_dst, &outlen, p_src, strlen(p_src));
-     /* Output encrypted block */
-         printf("Ciphertext:\n");
-         BIO_dump_fp(stdout, p_dst, outlen);
-     /* Finalise: note get no output for GCM */
-     EVP_EncryptFinal_ex(ctx, p_dst, &outlen);
-     /* Get tag */
-     EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, p_out_mac);
-     /* Output tag */
- //        printf("Tag:\n");
- //        BIO_dump_fp(stdout, p_out_mac, 16);
-     EVP_CIPHER_CTX_free(ctx);
- 
-  printf("Ciphertext:\n");
-  BIO_dump_fp(stdout, p_dst, strlen(p_dst));
-    printf("outlen:%d\n",outlen);
-   printf("strlen(p_dst):%d\n",strlen(p_dst));
-
-    uint32_t dec_len=0;
-    char *p_dec;
-    p_dec = (char *)malloc(sizeof(char)*1000);
-    ret = ecall_encl1_AES_GCM_decrypt(global_eid, p_dst, strlen(p_dst), p_dec, &dec_len);
-    if(ret == SGX_SUCCESS){
-    	printf("Decrypt success: %s\n", p_dec);
-    	printf("Descrpt length: %d\n", dec_len);
-    	printf("strlen(p_dec):%d\n", strlen(p_dec));
-    }
+time_substract(&t_diff,&t_start,&t_end);
+printf("time cost is: %u s, %u us.\n", t_diff.tv_sec, t_diff.tv_usec);
 
     sgx_destroy_enclave(global_eid);
     
-    return ecall_return;
+    return 0;
 }
