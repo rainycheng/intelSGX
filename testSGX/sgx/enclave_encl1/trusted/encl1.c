@@ -220,9 +220,9 @@ void ecall_encl1_update_operation(char *key, int *flag, int* vlen, char *value, 
 //    printf("%s\n",value);
 //    printf("vlen : %d\n",*vlen);
     char *cp;
-    cp = (char *)malloc(sizeof(char)*(*vlen+strlen(value_update)));
-    memcpy(cp,value,*vlen);
-    memcpy(cp+*vlen, value_update, strlen(value_update));
+//    cp = (char *)malloc(sizeof(char)*(*vlen+strlen(value_update)));
+//    memcpy(cp,value,*vlen);
+//    memcpy(cp+*vlen, value_update, strlen(value_update));
     encl1_AES_GCM_encrypt(value, *vlen, value_encrypt, *vlen, p_mac);
 
 //    encl1_AES_GCM_decrypt(value_encrypt, *vlen, value_plain, *vlen, p_mac);

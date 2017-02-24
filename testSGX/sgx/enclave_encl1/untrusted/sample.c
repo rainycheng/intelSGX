@@ -265,17 +265,23 @@ struct timeval t_start,t_end,t_diff;
     memset(&t_start,0,sizeof(struct timeval));
     memset(&t_end,0,sizeof(struct timeval));
     memset(&t_diff,0,sizeof(struct timeval));
-
+ 
+    char *sgx_buf="My first sgx time test program!";
+    int pow_size=1;
+    char *sgx_value;
+    for(int i=1;i<12;i++){
+       sgx_value=(char *)malloc(sizeof(char)*pow_size*8);
+       memset(sgx_value,'a',pow_size*8);
+       printf("pow_size:%d\n",pow_size*8);   
 gettimeofday(&t_start, NULL);
 
     ret = SGX_ERROR_UNEXPECTED;
     int cyx_flag, cyx_vlen;
-    char *sgx_buf="My first sgx time test program!";
     cyx_flag = 0;
-    cyx_vlen = strlen(sgx_buf);
-    char *sgx_value;
-    sgx_value = (char *)malloc(sizeof(char)*strlen(sgx_buf));
-    memcpy(sgx_value, sgx_buf, strlen(sgx_buf));
+    cyx_vlen = pow_size*8;
+//    char *sgx_value;
+//    sgx_value = (char *)malloc(sizeof(char)*strlen(sgx_buf));
+//    memcpy(sgx_value, sgx_buf, strlen(sgx_buf));
     ret = ecall_encl1_update_operation(global_eid, sgx_value, &cyx_flag, &cyx_vlen, sgx_value, sgx_value);
 //    printf("ecall return!\n");
 gettimeofday(&t_end, NULL);
@@ -288,7 +294,8 @@ gettimeofday(&t_end, NULL);
     }
 time_substract(&t_diff,&t_start,&t_end);
 printf("time cost is: %u s, %u us.\n", t_diff.tv_sec, t_diff.tv_usec);
-
+    pow_size = pow_size*2;
+}
     sgx_destroy_enclave(global_eid);
     
     return 0;
