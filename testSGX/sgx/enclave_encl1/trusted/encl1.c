@@ -148,7 +148,7 @@ void encl1_AES_GCM_encrypt(char *p_src,uint32_t src_len,char *p_des,uint32_t des
     iv_len = 12;
     p_aad = NULL;
     aad_len = 0;
-    p_mac = (sgx_aes_gcm_128bit_tag_t *)malloc(sizeof(sgx_aes_gcm_128bit_tag_t)*1000);
+    p_mac = (sgx_aes_gcm_128bit_tag_t *)malloc(sizeof(sgx_aes_gcm_128bit_tag_t)*100);
 
     ret = sgx_rijndael128GCM_encrypt(p_key, p_src, src_len, p_des, p_iv, iv_len, p_aad, aad_len, p_mac);
 
@@ -175,7 +175,7 @@ void encl1_AES_GCM_encrypt(char *p_src,uint32_t src_len,char *p_des,uint32_t des
     else{
        print_error_message(ret);
     }
-
+    free(p_plain);
 }
 
 void encl1_AES_GCM_decrypt(char *p_src,uint32_t src_len,char *p_des,uint32_t des_len, sgx_aes_gcm_128bit_tag_t *p_mac)
@@ -227,6 +227,8 @@ void ecall_encl1_update_operation(char *key, int *flag, int* vlen, char *value, 
 //printf("ecall processing!\n");
 //    encl1_AES_GCM_decrypt(value_encrypt, *vlen, value_plain, *vlen, p_mac);
 //    printf("enclave code end!\n");
+    free(value_encrypt);
+    free(p_mac);
 }
 
 void ecall_encl1_AES_GCM_decrypt(const char *p_src, uint32_t src_len, char *p_dec, uint32_t *dec_len)

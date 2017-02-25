@@ -275,19 +275,24 @@ struct timeval t_start,t_end,t_diff;
        printf("pow_size:%d\n",pow_size);
        update_value=(char *)malloc(sizeof(char)*64);
        memset(update_value,'b',64);
-   
-gettimeofday(&t_start, NULL);
-
     ret = SGX_ERROR_UNEXPECTED;
     int cyx_flag, cyx_vlen;
+    cyx_flag = 0;
+    cyx_vlen = pow_size;
+//    ret = ecall_encl1_update_operation(global_eid, sgx_key, &cyx_flag, &cyx_vlen, sgx_value, update_value,pow_size);   
+gettimeofday(&t_start, NULL);
+ 
+for(int j=0;j<1;j++){
+    ret = SGX_ERROR_UNEXPECTED;
     cyx_flag = 0;
     cyx_vlen = pow_size;
 //    char *sgx_value;
 //    sgx_value = (char *)malloc(sizeof(char)*strlen(sgx_buf));
 //    memcpy(sgx_value, sgx_buf, strlen(sgx_buf));
-    printf("Invoke ecall\n");
+//    printf("Invoke ecall\n");
     ret = ecall_encl1_update_operation(global_eid, sgx_key, &cyx_flag, &cyx_vlen, sgx_value, update_value,pow_size);
 //    printf("ecall return!\n");
+}
 gettimeofday(&t_end, NULL);
     if (ret == SGX_SUCCESS){
         printf("SGX Enclave update operation success.\n");
@@ -299,6 +304,8 @@ gettimeofday(&t_end, NULL);
 time_substract(&t_diff,&t_start,&t_end);
 printf("time cost is: %u s, %u us.\n", t_diff.tv_sec, t_diff.tv_usec);
     pow_size = pow_size*2;
+    free(sgx_value);
+    free(update_value);
 }
     sgx_destroy_enclave(global_eid);
     
